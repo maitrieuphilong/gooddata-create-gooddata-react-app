@@ -1,15 +1,37 @@
-import React from "react";
-import { InsightView } from "@gooddata/sdk-ui-ext";
+import React, { useState } from "react";
+import { OnLoadingChanged, OnError } from "@gooddata/sdk-ui";
+import { AttributeFilter } from "@gooddata/sdk-ui-filters";
+import { LineChart } from "@gooddata/sdk-ui-charts";
+import { IAttributeFilter, modifyMeasure, newNegativeAttributeFilter } from "@gooddata/sdk-model";
 import * as Md from "../md/full";
-
-const style = { height: 300 };
-
-const Home: React.FC = () => {
+const TotalSales = modifyMeasure(Md.SumHourly, (m) =>
+    m.format("#,##0").alias("$ Total Sales").title("Total Sales"),
+);
+export const AttributeFilterExample: React.FC = () => {
+    const [filter, setFilter] = useState<IAttributeFilter>(
+        newNegativeAttributeFilter(Md.EmployeeState, { uris: [] }),
+    );
+    const onLoadingChanged: OnLoadingChanged = (...params) => {
+        // eslint-disable-next-line no-console
+        console.info("AttributeFilterExample onLoadingChanged", ...params);
+    };
+    const onError: OnError = (...params) => {
+        // eslint-disable-next-line no-console
+        console.info("AttributeFilterExample onLoadingChanged", ...params);
+    };
     return (
-        <div style={style} className="s-insightView-chart">
-            <InsightView insight={Md.Insights.InsightHasNoFilter} />
+        <div className="s-attribute-filter">
+            <AttributeFilter filter={filter} fullscreenOnMobile={false} onApply={setFilter} />
+            <div style={{ height: 300 }} className="s-line-chart">
+                <LineChart
+                    measures={[TotalSales]}
+                    trendBy={Md.EmployeeState}
+                    filters={filter ? [filter] : []}
+                    onLoadingChanged={onLoadingChanged}
+                    onError={onError}
+                />
+            </div>
         </div>
     );
 };
-
-export default Home;
+export default AttributeFilterExample;
